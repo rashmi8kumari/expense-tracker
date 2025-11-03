@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import path, re_path
+from django.views.generic import TemplateView
 from .views import RegisterView, ExpenseListCreateView, ExpenseDetailView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -13,4 +14,9 @@ urlpatterns = [
     path('expenses/<int:pk>/', ExpenseDetailView.as_view(), name='expense-detail'),
 ]
 
+
+# Serve React build files
+urlpatterns += [
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='home'),
+]
 

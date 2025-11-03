@@ -1,11 +1,19 @@
 from pathlib import Path
 from datetime import timedelta
+import os
+import dj_database_url
 
+# ---------------------------------------------------------
+# Base Directory
+# ---------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ---------------------------------------------------------
+# Security Settings
+# ---------------------------------------------------------
 SECRET_KEY = "django-insecure-%86+ibyr=ha$7nxq+n^h9l$5h7nk&4*=p7$y%gvm2kk6=ty+!y"
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = False
+ALLOWED_HOSTS = ["*"]  # later replace with your Render URL
 
 # ---------------------------------------------------------
 # Installed Apps
@@ -28,13 +36,15 @@ INSTALLED_APPS = [
 ]
 
 # ---------------------------------------------------------
-# Middleware (CORS must be at top)
+# Middleware (WhiteNoise + CORS)
 # ---------------------------------------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",   # important for frontend connection
+    "corsheaders.middleware.CorsMiddleware",  # allow frontend requests
     "django.middleware.common.CommonMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # for static files in production
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -42,12 +52,19 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# ---------------------------------------------------------
+# URL & WSGI
+# ---------------------------------------------------------
 ROOT_URLCONF = "backend.urls"
+WSGI_APPLICATION = "backend.wsgi.application"
 
+# ---------------------------------------------------------
+# Templates (for serving React build)
+# ---------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "frontend_build")],  # React build folder
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -59,16 +76,13 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
-
 # ---------------------------------------------------------
-# Database (SQLite for development)
+# Database (Render’s DATABASE_URL or local SQLite)
 # ---------------------------------------------------------
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600
+    )
 }
 
 # ---------------------------------------------------------
@@ -82,7 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ---------------------------------------------------------
-# Django REST Framework + JWT Authentication
+# Django REST Framework + JWT
 # ---------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -94,31 +108,43 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),   # 1 hour access token
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),      # 1 day refresh token
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # ---------------------------------------------------------
-# CORS (for React frontend connection)
+# CORS (React Frontend Connection)
 # ---------------------------------------------------------
 CORS_ALLOW_ALL_ORIGINS = True
-# Or restrict for safety later:
-# CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+# Later, you can restrict to your production URL like:
+# CORS_ALLOWED_ORIGINS = ["https://expense-tracker.onrender.com"]
 
 # ---------------------------------------------------------
-# Internationalization
+# Static Files (React + Django)
+# ---------------------------------------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "frontend_build/static")]
+
+# WhiteNoise for serving static assets
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# ---------------------------------------------------------
+# Templates (Frontend React build)
+# ---------------------------------------------------------
+TEMPLATES[0]["DIRS"] = [os.path.join(BASE_DIR, "frontend_build")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend_build/static')]
+
+# ---------------------------------------------------------
+# Default Settings
 # ---------------------------------------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
 
-# ---------------------------------------------------------
-# Static Files
-# ---------------------------------------------------------
-STATIC_URL = "static/"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 
