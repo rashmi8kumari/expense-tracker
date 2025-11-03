@@ -4,7 +4,6 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-%86+ibyr=ha$7nxq+n^h9l$5h7nk&4*=p7$y%gvm2kk6=ty+!y"
-
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -29,10 +28,10 @@ INSTALLED_APPS = [
 ]
 
 # ---------------------------------------------------------
-# Middleware (add corsheaders on top)
+# Middleware (CORS must be at top)
 # ---------------------------------------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",   # must be above CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",   # important for frontend connection
     "django.middleware.common.CommonMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
@@ -63,7 +62,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # ---------------------------------------------------------
-# Database (SQLite for dev)
+# Database (SQLite for development)
 # ---------------------------------------------------------
 DATABASES = {
     "default": {
@@ -83,26 +82,29 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ---------------------------------------------------------
-# Django REST Framework + JWT Setup
+# Django REST Framework + JWT Authentication
 # ---------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": True,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),   # 1 hour access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),      # 1 day refresh token
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # ---------------------------------------------------------
-# CORS (for frontend connection)
+# CORS (for React frontend connection)
 # ---------------------------------------------------------
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all during dev (safe for local testing)
+CORS_ALLOW_ALL_ORIGINS = True
+# Or restrict for safety later:
+# CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
 
 # ---------------------------------------------------------
 # Internationalization
@@ -113,9 +115,10 @@ USE_I18N = True
 USE_TZ = True
 
 # ---------------------------------------------------------
-# Static files
+# Static Files
 # ---------------------------------------------------------
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
